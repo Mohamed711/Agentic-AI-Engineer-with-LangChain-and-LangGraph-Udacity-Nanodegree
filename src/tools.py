@@ -67,7 +67,45 @@ def create_calculator_tool(logger: ToolLogger):
     Creates a calculator tool - TO BE IMPLEMENTED
     """
     # Your implementation here
-    pass
+    @tool
+    def calculator(expression: str) -> str:
+        """
+        Evaluate a mathematical expression and return the result.
+
+        Args:
+            expression: A string containing the mathematical expression to evaluate (e.g., "2 + 2 * (3 - 1)")
+
+        Returns:
+            The result of the evaluated expression or an error message if evaluation fails.
+        """
+
+        try:
+            formatted_result = eval(expression)
+            # Log the tool use
+            logger.log_tool_use(
+                "calculator",
+                {
+                    "expression": expression,
+                },
+                {"result": f"Expression result: {expression} = {formatted_result}"},
+            )
+
+            return formatted_result
+
+        except Exception as e:
+            error_msg = f"Error evaluating expression: {str(e)}"
+            logger.log_tool_use(
+                "calculator",
+                {
+                    "expression": expression,
+                },
+                {"error": error_msg}
+            )
+            return error_msg
+
+
+
+    return calculator
 
 
 def create_document_search_tool(retriever, logger: ToolLogger):
