@@ -16,10 +16,6 @@ from schemas import (
 from prompts import get_intent_classification_prompt, get_chat_prompt_template, MEMORY_SUMMARY_PROMPT
 
 
-# TODO: The AgentState class is already implemented for you.  Study the
-# structure to understand how state flows through the LangGraph
-# workflow.  See README.md Task 2.1 for detailed explanations of
-# each property.
 class AgentState(TypedDict):
     """
     The agent state object
@@ -44,12 +40,11 @@ class AgentState(TypedDict):
     session_id: Optional[str]
     user_id: Optional[str]
 
-    # TODO: Modify actions_taken to use an operator.add reducer
-    actions_taken: Annotated[List[str]]
+    actions_taken: Annotated[List[str], operator.add]
 
 
-def invoke_react_agent(response_schema: type[BaseModel], messages: List[BaseMessage], llm, tools) -> (
-Dict[str, Any], List[str]):
+def invoke_react_agent(response_schema: type[BaseModel], messages: List[BaseMessage], llm, tools) \
+        -> (Dict[str, Any], List[str]):
     llm_with_tools = llm.bind_tools(
         tools
     )
@@ -66,9 +61,6 @@ Dict[str, Any], List[str]):
     return result, tools_used
 
 
-# TODO: Implement the classify_intent function.
-# This function should classify the user's intent and set the next step in the workflow.
-# Refer to README.md Task 2.2
 def classify_intent(state: AgentState, config: RunnableConfig) -> AgentState:
     """
     Classify user intent and update next_step. Also records that this
@@ -78,17 +70,20 @@ def classify_intent(state: AgentState, config: RunnableConfig) -> AgentState:
     llm = config.get("configurable").get("llm")
     history = state.get("messages", [])
 
-    # TODO Configure the llm chat model for structured output
+    llm_with_structure = llm.with_structured_output(UserIntent)
 
-    # TODO Create a formatted prompt with conversation history and user input
+    intent_prompt = get_intent_classification_prompt()
+    response = llm_with_structure.invoke(intent_prompt.format(user_input = state["user_input"], conversation_history= history))
 
-    next_step = "qa"
+    mapping_intent = {"qa": "qa_agent", "summarization": "summarization_agent",
+                      "calculation": "calculation_agent"}
 
-    # TODO: Add conditional logic to set next_step based on intent
+    next_step = mapping_intent.get(response.intent_type, "qa_agent")
 
     return {
         "actions_taken": ["classify_intent"],
-        # TODO: Update state intent and next_step
+        "intent" : response.intent_type,
+        "next_step": next_step
     }
 
 
