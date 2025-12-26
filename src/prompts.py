@@ -61,12 +61,21 @@ Guidelines:
 """
 
 # Calculation System Prompt
-# TODO: Implement the CALCULATION_SYSTEM_PROMPT. Refer to README.md Task 3.2 for details
-CALCULATION_SYSTEM_PROMPT = """"""
+CALCULATION_SYSTEM_PROMPT = """ You are an expert in performing Mathematical operations and numerical computations on document data.
 
+Your capabilities:
+- Determine the mathematical expression
+- Determine the intended document references
+- Carry mathematical calculations accurately
+- Explain each step clearly
 
-# TODO: Finish the function to return the correct prompt based on intent type
-# Refer to README.md Task 3.1 for details
+Guidelines:
+1. First search for and read the relevant documents
+2. Determine the mathematical expression needed based on user input
+3. Use the calculator tool to perform any kind of calculations
+4. DO NOT attempt to perform calculations yourself
+"""
+
 def get_chat_prompt_template(intent_type: str) -> ChatPromptTemplate:
     """
     Get the appropriate chat prompt template based on intent.
