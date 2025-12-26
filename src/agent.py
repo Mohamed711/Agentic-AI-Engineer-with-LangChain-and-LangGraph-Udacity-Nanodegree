@@ -112,25 +112,54 @@ def qa_agent(state: AgentState, config: RunnableConfig) -> AgentState:
     }
 
 
-# TODO: Implement the summarization_agent function. Refer to README.md Task 2.3
 def summarization_agent(state: AgentState, config: RunnableConfig) -> AgentState:
     """
     Handle summarization tasks and record the action.
     """
 
-    return {
+    llm = config.get("configurable").get("llm")
+    tools = config.get("configurable").get("tools")
 
+    prompt_template = get_chat_prompt_template("summarization")
+
+    messages = prompt_template.invoke({
+        "input": state["user_input"],
+        "chat_history": state.get("messages", []),
+    }).to_messages()
+
+    result, tools_used = invoke_react_agent(SummarizationResponse, messages, llm, tools)
+
+    return {
+        "messages": result.get("messages", []),
+        "actions_taken": ["summarization_agent"],
+        "current_response": result,
+        "tools_used": tools_used,
+        "next_step": "update_memory",
     }
 
 
-# TODO: Implement the calculation_agent function. Refer to README.md Task 2.3
 def calculation_agent(state: AgentState, config: RunnableConfig) -> AgentState:
     """
     Handle calculation tasks and record the action.
     """
+    llm = config.get("configurable").get("llm")
+    tools = config.get("configurable").get("tools")
+
+    prompt_template = get_chat_prompt_template("calculation")
+
+    messages = prompt_template.invoke({
+        "input": state["user_input"],
+        "chat_history": state.get("messages", []),
+    }).to_messages()
+
+    result, tools_used = invoke_react_agent(CalculationResponse, messages, llm, tools)
 
     return {
-
+        "messages": result.get("messages", []),
+        "actions_taken": ["calculation_agent"],
+        "current_response": result,
+        "tools_used": tools_used,
+        "next_step": "update_memory",
     }
 
 
