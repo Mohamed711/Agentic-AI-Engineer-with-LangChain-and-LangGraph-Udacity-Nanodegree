@@ -163,13 +163,12 @@ def calculation_agent(state: AgentState, config: RunnableConfig) -> AgentState:
     }
 
 
-# TODO: Finish implementing the update_memory function. Refer to README.md Task 2.4
-def update_memory(state: AgentState) -> AgentState:
+def update_memory(state: AgentState, config: RunnableConfig) -> AgentState:
     """
     Update conversation memory and record the action.
     """
 
-    # TODO: Retrieve the LLM from config
+    llm = config.get("configurable").get("llm")
 
     prompt_with_history = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(MEMORY_SUMMARY_PROMPT),
@@ -178,15 +177,13 @@ def update_memory(state: AgentState) -> AgentState:
         "chat_history": state.get("messages", []),
     })
 
-    structured_llm = llm.with_structured_output(
-        # TODO Pass in the correct schema from scheams.py to extract conversation summary, active documents
-    )
-
+    structured_llm = llm.with_structured_output(UpdateMemoryResponse)
     response = structured_llm.invoke(prompt_with_history)
+
     return {
-        "conversation_summary":  # TODO: Extract summary from response
-            "active_documents":  # TODO: Update with the current active documents
-    "next_step":  # TODO: Update the next step to end
+        "conversation_summary":  response.summary,
+        "active_documents":  response.document_ids,
+        "next_step":  "end"
     }
 
     def should_continue(state: AgentState) -> str:
