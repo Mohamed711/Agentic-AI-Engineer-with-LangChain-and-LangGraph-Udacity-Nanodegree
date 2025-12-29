@@ -1,5 +1,5 @@
 from langchain_core.messages import BaseMessage
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import List, Optional, Dict, Any, Literal, TypedDict
 from datetime import datetime
 
@@ -17,8 +17,18 @@ class AnswerResponse(BaseModel):
     question: str = Field(description="Question text")
     answer: str = Field(description="The generated answer")
     sources: List[str] = Field(default_factory=lambda: list, description="List of sources")
-    confidence: float = Field(description="Confidence score of the answer")
+    confidence: float = Field(le=1.0, ge=0.0, description="Confidence score of the answer")
     timestamp: datetime = Field(default_factory=datetime.now)
+
+    @model_validator(mode='after')
+    def validate_sources_with_confidence(self):
+        """Enforce non-empty sources when confidence is high (>= 0.7)"""
+        if self.confidence >= 0.7 and not self.sources:
+            raise ValueError(
+                f"Sources cannot be empty when confidence is high ({self.confidence}). "
+                "Please provide at least one source to support the high confidence claim."
+            )
+        return self
 
 
 class SummarizationResponse(BaseModel):
@@ -48,7 +58,7 @@ class UpdateMemoryResponse(BaseModel):
 class UserIntent(BaseModel):
     """User intent classification"""
     intent_type: Literal["qa", "summarization", "calculation", "unknown"] = Field(description="Type of user intent")
-    confidence: float = Field(description="Confidence score of the intent classification")
+    confidence: float = Field(le=1.0, ge=0.0, description="Confidence score of the intent classification")
     reasoning: str = Field(description="Explanation of how the intent was determined")
 
 
