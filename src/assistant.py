@@ -131,7 +131,6 @@ class DocumentAssistant:
             "user_input": user_input,
             "intent": None,
             "next_step": "classify_intent",
-            "conversation_history": self.current_session.conversation_history,
             "conversation_summary": self._get_conversation_summary(config),
             "active_documents": self.current_session.document_context,
             "current_response": None,
