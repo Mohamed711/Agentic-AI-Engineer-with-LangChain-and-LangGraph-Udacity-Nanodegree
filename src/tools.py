@@ -5,8 +5,7 @@ Think of these as the agent's Swiss Army knife 🔧 - each tool has a specific p
 
 from typing import Dict, Any, List, Optional, Literal
 from langchain.tools import tool
-from pydantic import BaseModel, Field
-import re
+import ast
 import json
 from datetime import datetime
 
@@ -59,14 +58,42 @@ class ToolLogger:
             json.dump(self.logs, f, indent=2)
 
 
-# TODO: Implement the calculator tool using the @tool decorator.
-# This tool should safely evaluate mathematical expressions and log its usage.
-# Refer to README.md Task 4.1 for detailed implementation requirements.
+def safe_eval(expression: str):
+    """Safely evaluate a mathematical expression from a string input."""
+
+    allowed_operators = (
+        ast.Add,    # '+'
+        ast.Sub,    # '-'
+        ast.Mult,   # '*'
+        ast.Div,    # '/'
+        ast.Pow,    # '**'
+        ast.USub,   # unary '-'
+    )
+
+    allowed_nodes = (ast.BinOp, ast.UnaryOp, ast.Constant)
+
+    # Parse the string expression into an Abstract Syntax Tree (AST)
+    tree = ast.parse(expression, mode='eval')
+
+    for node in ast.walk(tree.body):
+        if isinstance(node, ast.Constant):
+            if not isinstance(node.value, (int, float)):
+                raise ValueError("Only numbers allowed")
+
+        elif isinstance(node, (ast.BinOp, ast.UnaryOp)):
+            if not isinstance(node.op, allowed_operators):
+                raise ValueError("Unsafe operator")
+
+        elif not isinstance(node, allowed_nodes):
+            raise ValueError(f"Unsafe node: {type(node).__name__}")
+
+    # Remove all built-in functions and global variables access for safety
+    return eval(compile(tree, '<string>', 'eval'), {"__builtins__": {}}, {})
+
 def create_calculator_tool(logger: ToolLogger):
     """
     Creates a calculator tool - TO BE IMPLEMENTED
     """
-    # Your implementation here
     @tool
     def calculator(expression: str) -> str:
         """
@@ -80,7 +107,7 @@ def create_calculator_tool(logger: ToolLogger):
         """
 
         try:
-            formatted_result = eval(expression)
+            formatted_result = safe_eval(expression)
             # Log the tool use
             logger.log_tool_use(
                 "calculator",
@@ -90,7 +117,7 @@ def create_calculator_tool(logger: ToolLogger):
                 {"result": f"Expression result: {expression} = {formatted_result}"},
             )
 
-            return formatted_result
+            return str(formatted_result)
 
         except Exception as e:
             error_msg = f"Error evaluating expression: {str(e)}"
