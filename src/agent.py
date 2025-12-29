@@ -41,6 +41,7 @@ class AgentState(TypedDict):
     session_id: Optional[str]
     user_id: Optional[str]
 
+    # Record of actions taken
     actions_taken: Annotated[List[str], operator.add]
 
 
@@ -68,18 +69,20 @@ def classify_intent(state: AgentState, config: RunnableConfig) -> AgentState:
     function executed by appending "classify_intent" to actions_taken.
     """
 
+    # Read the provided LLM from config
     llm = config.get("configurable").get("llm")
-    history = state.get("messages", [])
 
-    llm_with_structure = llm.with_structured_output(UserIntent)
-
+    # Read the classification prompt, and format it with user input and history
     intent_prompt = get_intent_classification_prompt()
-    response = llm_with_structure.invoke(intent_prompt.format(user_input = state["user_input"], conversation_history= history))
+    formatted_prompt = intent_prompt.format(user_input = state["user_input"],
+                                            conversation_history= state.get("messages", []))
 
-    mapping_intent = {"qa": "qa_agent", "summarization": "summarization_agent",
-                      "calculation": "calculation_agent"}
+    # Invoke the LLM with structured output to determine the intent of the user input
+    llm_with_structure = llm.with_structured_output(UserIntent)
+    response = llm_with_structure.invoke(formatted_prompt)
 
-    next_step = mapping_intent.get(response.intent_type, "qa_agent")
+    # Adjust next step based on intent type
+    next_step = response.intent_type
 
     return {
         "actions_taken": ["classify_intent"],
@@ -118,16 +121,18 @@ def summarization_agent(state: AgentState, config: RunnableConfig) -> AgentState
     Handle summarization tasks and record the action.
     """
 
+    # Read the configurable LLM and tools
     llm = config.get("configurable").get("llm")
     tools = config.get("configurable").get("tools")
 
+    # Apply the appropriate prompt template
     prompt_template = get_chat_prompt_template("summarization")
-
     messages = prompt_template.invoke({
         "input": state["user_input"],
         "chat_history": state.get("messages", []),
     }).to_messages()
 
+    # Invoke the ReAct agent with structured output
     result, tools_used = invoke_react_agent(SummarizationResponse, messages, llm, tools)
 
     return {
@@ -143,16 +148,19 @@ def calculation_agent(state: AgentState, config: RunnableConfig) -> AgentState:
     """
     Handle calculation tasks and record the action.
     """
+
+    # Read the configurable LLM and tools
     llm = config.get("configurable").get("llm")
     tools = config.get("configurable").get("tools")
 
+    # Apply the appropriate prompt template
     prompt_template = get_chat_prompt_template("calculation")
-
     messages = prompt_template.invoke({
         "input": state["user_input"],
         "chat_history": state.get("messages", []),
     }).to_messages()
 
+    # Invoke the ReAct agent with structured output
     result, tools_used = invoke_react_agent(CalculationResponse, messages, llm, tools)
 
     return {
@@ -184,12 +192,16 @@ def update_memory(state: AgentState, config: RunnableConfig) -> AgentState:
     return {
         "conversation_summary":  response.summary,
         "active_documents":  response.document_ids,
+        "actions_taken": ["update_memory"],
         "next_step":  "end"
     }
 
+
 def should_continue(state: AgentState) -> str:
     """Router function"""
+    # The next step is determined by the classify_intent function as intent_type
     return state.get("next_step", "end")
+
 
 def create_workflow(llm, tools):
     """
@@ -198,24 +210,28 @@ def create_workflow(llm, tools):
     """
     workflow = StateGraph(AgentState)
 
+    # Add the graph nodes
     workflow.add_node("classify_intent", classify_intent)
     workflow.add_node("qa_agent", qa_agent)
     workflow.add_node("summarization_agent", summarization_agent)
     workflow.add_node("calculation_agent", calculation_agent)
     workflow.add_node("update_memory", update_memory)
 
+    # Add the graph edges
     workflow.set_entry_point("classify_intent")
     workflow.add_conditional_edges(
         "classify_intent",
         should_continue,
         {
-            "qa_agent": "qa_agent",
-            "summarization_agent": "summarization_agent",
-            "calculation_agent": "calculation_agent",
+            # Mapping between the intent_type returned by should_continue, and the next node name
+            "qa": "qa_agent",
+            "summarization": "summarization_agent",
+            "calculation": "calculation_agent",
             "end": END
         }
     )
 
+    # Connect the nodes to the update_memory
     workflow.add_edge("qa_agent", "update_memory")
     workflow.add_edge("summarization_agent", "update_memory")
     workflow.add_edge("calculation_agent", "update_memory")
