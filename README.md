@@ -412,19 +412,9 @@ If you need more details about any of these documents, please let me know!
 }
 ```
 
-**Conversation Summary:**
-"The user requested documents with amounts over $50,000. Three documents were found: Invoice #12347 (INV-003) with an amount of $214,500.00, a Service Agreement (CON-001) with an amount of $180,000.00, and Invoice #12346 (INV-002) with an amount of $69,300.00."
-
 **Active Documents**: ["INV-003", "CON-001", "INV-002"]
 
 **Actions Taken**: `["classify_intent", "qa_agent", "update_memory"]`
-
-**Key Features Demonstrated:**
-- **Advanced search**: Uses `document_search` tool with amount filtering (comparison: "over", amount: 50000)
-- **Multi-document retrieval**: Returns multiple documents matching the criteria
-- **Structured results**: Presents documents in an organized, easy-to-read format
-- **Source tracking**: All three document IDs are recorded in the structured response
-- **High confidence**: Despite finding multiple documents, confidence remains high (0.95) due to clear search criteria
 
 ---
 
