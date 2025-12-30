@@ -84,6 +84,11 @@ def safe_eval(expression: str):
             if not isinstance(node.op, allowed_operators):
                 raise ValueError("Unsafe operator")
 
+        # Operator nodes (ast.Add, ast.Sub, etc.) are already validated above
+        # within their parent BinOp/UnaryOp nodes, so we skip them here
+        elif isinstance(node, allowed_operators):
+            continue
+
         elif not isinstance(node, allowed_nodes):
             raise ValueError(f"Unsafe node: {type(node).__name__}")
 
