@@ -1,4 +1,3 @@
-from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Optional, Dict, Any, Literal, TypedDict
 from datetime import datetime

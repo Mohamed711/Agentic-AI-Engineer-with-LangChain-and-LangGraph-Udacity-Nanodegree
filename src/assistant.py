@@ -11,7 +11,6 @@ from schemas import SessionState
 from retrieval import SimulatedRetriever
 from tools import get_all_tools, ToolLogger
 from agent import create_workflow, AgentState
-from prompts import MEMORY_SUMMARY_PROMPT
 
 
 class DocumentAssistant:
@@ -111,7 +110,6 @@ class DocumentAssistant:
 
         history = current_state.get("messages", [])
         return history
-
 
     def process_message(self, user_input: str) -> Dict[str, Any]:
         """Process a user message using the LangGraph workflow."""
