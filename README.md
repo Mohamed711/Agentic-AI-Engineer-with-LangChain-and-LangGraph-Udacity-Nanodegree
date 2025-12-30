@@ -416,5 +416,51 @@ If you need more details about any of these documents, please let me know!
 
 **Actions Taken**: `["classify_intent", "qa_agent", "update_memory"]`
 
+**Key Features Demonstrated:**
+- **Advanced search**: Uses `document_search` tool with amount filtering (comparison: "over", amount: 50000)
+- **Multi-document retrieval**: Returns multiple documents matching the criteria
+- **Structured results**: Presents documents in an organized, easy-to-read format
+- **Source tracking**: All three document IDs are recorded in the structured response
+- **High confidence**: Despite finding multiple documents, confidence remains high (0.95) due to clear search criteria
+
+---
+
+### Example 5: Q&A Agent (Specific Document Query)
+
+**User Input:**
+```
+What is the date of invoice #12347?
+```
+
+**Intent Classification:**
+- **Intent Type**: `qa`
+- **Confidence**: 0.96
+- **Reasoning**: "The user is asking a specific factual question about a document (the date of invoice #12347). This is a straightforward question-answering task."
+
+**Agent Execution:**
+- **Agent**: `qa_agent`
+- **Tools Used**:
+  1. `document_search` - Searched for invoice #12347 (INV-003)
+
+**Assistant Response:**
+```
+The date of Invoice #12347 is March 1, 2024.
+```
+
+**Structured Response:**
+```json
+{
+  "question": "What is the date of invoice #12347?",
+  "answer": "The date of Invoice #12347 is March 1, 2024.",
+  "sources": ["INV-003"],
+  "confidence": 0.98,
+  "timestamp": "2024-12-30T14:42:30"
+}
+```
+
+**Active Documents**: ["INV-003"]
+
+**Actions Taken**: `["classify_intent", "qa_agent", "update_memory"]`
+
 ---
 
