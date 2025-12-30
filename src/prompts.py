@@ -40,6 +40,7 @@ Guidelines:
 3. If information is not found, say so clearly
 4. Be precise with numbers and dates
 5. Maintain professional tone
+6. Always include sources in your answers when confidence is higher than 0.7
 
 """
 
