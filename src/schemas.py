@@ -65,7 +65,7 @@ class SessionState(BaseModel):
     """Session state"""
     session_id: str
     user_id: str
-    conversation_history: List[TypedDict] = Field(default_factory=lambda: list)
+    conversation_history: List[Dict[str, Any]] = Field(default_factory=lambda: list)
     document_context: List[str] = Field(default_factory=lambda: list, description="Active document IDs")
     created_at: datetime = Field(default_factory=datetime.now)
     last_updated: datetime = Field(default_factory=datetime.now)

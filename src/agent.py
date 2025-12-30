@@ -226,6 +226,7 @@ def create_workflow(llm, tools):
             "qa": "qa_agent",
             "summarization": "summarization_agent",
             "calculation": "calculation_agent",
+            "unknown":  "qa_agent",  # Default to QA for unknown intents
             "end": END
         }
     )
